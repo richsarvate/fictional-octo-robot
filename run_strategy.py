@@ -13,6 +13,7 @@ import pandas as pd
 from data import get_clean_sp500_data
 from signal_meanrev import MeanReversionSignal, calculate_signal_quality
 from signal_momentum import MomentumSignal
+from signal_sector_relative import SectorRelativeSignal
 from signal_combined import CombinedSignal
 from portfolio import Portfolio
 from backtest import Backtest
@@ -40,6 +41,8 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         print(f"Mean Reversion: {meanrev_weight:.0%}, Momentum: {momentum_weight:.0%}")
     elif strategy == 'momentum':
         print("MOMENTUM STOCK PICKING STRATEGY")
+    elif strategy == 'sector':
+        print("SECTOR RELATIVE STOCK PICKING STRATEGY")
     else:
         print("MEAN REVERSION STOCK PICKING STRATEGY")
     print("=" * 70)
@@ -76,6 +79,16 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         from signal_momentum import calculate_signal_quality as calc_quality_mom
         print("\nEvaluating signal quality...")
         quality = calc_quality_mom(signals)
+        
+    elif strategy == 'sector':
+        print("\nCalculating sector relative signals...")
+        signal_calc = SectorRelativeSignal()
+        signals = signal_calc.calculate(data)
+        
+        # Calculate signal quality
+        from signal_sector_relative import calculate_signal_quality as calc_quality_sector
+        print("\nEvaluating signal quality...")
+        quality = calc_quality_sector(signals)
         
     else:  # meanrev
         print("\nCalculating mean reversion signals...")
@@ -136,7 +149,7 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
     print("=" * 70)
 
 
-def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
+def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
                       start_date: str = None, end_date: str = None,
                       top_n_long: int = None, top_n_short: int = None,
                       strategy: str = 'combined', meanrev_weight: float = 0.5,
@@ -145,7 +158,7 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
     Run historical backtest.
     
     Args:
-        days: Number of days to backtest (default: 10 years)
+        days: Number of days to backtest (default: 1 month)
         capital: Starting capital (default: $1M)
         start_date: Specific start date for BACKTEST (overrides days)
         end_date: Specific end date (default: today)
@@ -159,6 +172,8 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
     print("BACKTEST MODE")
     if strategy == 'combined':
         print(f"Strategy: Combined (Mean Rev: {meanrev_weight:.0%}, Momentum: {momentum_weight:.0%})")
+    elif strategy == 'sector':
+        print(f"Strategy: Sector Relative")
     else:
         print(f"Strategy: {strategy.title()}")
     print("=" * 70)
@@ -167,8 +182,11 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
     # We need at least 252 trading days (1 year) of history before backtest start
     
     if start_date is None:
-        start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-        data_start = start_date  # Use same start for data
+        # Backtest period starts 'days' ago
+        backtest_start = datetime.now() - timedelta(days=days)
+        start_date = backtest_start.strftime('%Y-%m-%d')
+        # Load data starting 400 days before backtest start to have enough history for signals
+        data_start = (backtest_start - timedelta(days=400)).strftime('%Y-%m-%d')
     else:
         # Start loading data 400 days before backtest start to have enough history
         backtest_start = datetime.strptime(start_date, '%Y-%m-%d')
@@ -204,6 +222,13 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
         
         from signal_momentum import calculate_signal_quality as calc_quality_mom
         quality = calc_quality_mom(signals)
+        
+    elif strategy == 'sector':
+        signal_calc = SectorRelativeSignal()
+        signals = signal_calc.calculate(data)
+        
+        from signal_sector_relative import calculate_signal_quality as calc_quality_sector
+        quality = calc_quality_sector(signals)
         
     else:  # meanrev
         signal_calc = MeanReversionSignal()
@@ -255,8 +280,8 @@ def main():
     parser.add_argument(
         '--days',
         type=int,
-        default=730,
-        help='Number of days of historical data to fetch (default: 730)'
+        default=30,
+        help='Number of days for backtest period (default: 30)'
     )
     parser.add_argument(
         '--portfolio-value',
@@ -292,8 +317,8 @@ def main():
         '--strategy',
         type=str,
         default='combined',
-        choices=['meanrev', 'momentum', 'combined'],
-        help='Signal strategy: meanrev, momentum, or combined (default: combined)'
+        choices=['meanrev', 'momentum', 'sector', 'combined'],
+        help='Signal strategy: meanrev, momentum, sector, or combined (default: combined)'
     )
     parser.add_argument(
         '--meanrev-weight',

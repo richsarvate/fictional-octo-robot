@@ -123,9 +123,10 @@ class Backtest:
                 
                 # Update positions
                 current_positions = target_positions.copy()
-                current_positions['shares'] = (
-                    current_positions['weight'] * portfolio_value / day_prices
-                )
+                if not current_positions.empty:
+                    current_positions['shares'] = (
+                        current_positions['weight'] * portfolio_value / day_prices
+                    )
             
             # Calculate portfolio value
             if not current_positions.empty:
@@ -181,12 +182,24 @@ class Backtest:
         """
         trades = []
         
+        # Handle empty DataFrames
+        if current.empty and target.empty:
+            return trades
+        
         # Calculate changes
         all_tickers = current.index.union(target.index)
         
         for ticker in all_tickers:
-            current_weight = current.loc[ticker, 'weight'] if ticker in current.index else 0
-            target_weight = target.loc[ticker, 'weight'] if ticker in target.index else 0
+            # Safely get weights
+            if not current.empty and ticker in current.index:
+                current_weight = current.loc[ticker, 'weight']
+            else:
+                current_weight = 0
+                
+            if not target.empty and ticker in target.index:
+                target_weight = target.loc[ticker, 'weight']
+            else:
+                target_weight = 0
             
             if ticker not in prices.index:
                 continue
