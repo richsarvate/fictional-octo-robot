@@ -1,0 +1,55 @@
+Alpaca Trade Log - 2025-10-29 13:47:20.463251
+======================================================================
+
+ORDERS:
+  CLOSE  AAPL   sell $    45,000
+    Reason: Not in target portfolio
+  CLOSE  MSFT   sell $    52,000
+    Reason: Not in target portfolio
+  CLOSE  GOOGL  sell $    48,000
+    Reason: Not in target portfolio
+  CLOSE  NVDA   buy  $    38,000
+    Reason: Not in target portfolio
+  ADJUST EIX    buy  $    10,000
+    Reason: Rebalance: $40,000 -> $50,000
+  OPEN   TAP    buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   GIS    buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   BG     buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   DVN    buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   CAG    buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   APA    buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   CMCSA  buy  $    50,000
+    Reason: New long: $50,000
+  OPEN   AES    buy  $    50,000
+    Reason: New long: $50,000
+  ADJUST TGT    buy  $    15,000
+    Reason: Rebalance: $35,000 -> $50,000
+  OPEN   ABBV   sell $    50,000
+    Reason: New short: $50,000
+  OPEN   VTR    sell $    50,000
+    Reason: New short: $50,000
+  OPEN   FIS    sell $    50,000
+    Reason: New short: $50,000
+  OPEN   DD     sell $    50,000
+    Reason: New short: $50,000
+  OPEN   TECH   sell $    50,000
+    Reason: New short: $50,000
+  OPEN   NRG    sell $    50,000
+    Reason: New short: $50,000
+  ADJUST TSLA   sell $     8,000
+    Reason: Rebalance: $-42,000 -> $-50,000
+  OPEN   DDOG   sell $    50,000
+    Reason: New short: $50,000
+  OPEN   AXON   sell $    50,000
+    Reason: New short: $50,000
+  OPEN   WTW    sell $    50,000
+    Reason: New short: $50,000
+
+======================================================================
+

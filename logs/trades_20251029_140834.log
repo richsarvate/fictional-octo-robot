@@ -1,0 +1,52 @@
+Alpaca Trade Log - 2025-10-29 14:08:34.190623
+======================================================================
+
+ORDERS:
+  CLOSE  ENPH   sell $         0
+    Reason: Not in target portfolio
+  OPEN   ABBV   sell $     4,967
+    Reason: New short: $4,967
+  OPEN   VTR    sell $     4,967
+    Reason: New short: $4,967
+  OPEN   FIS    sell $     4,967
+    Reason: New short: $4,967
+  OPEN   DD     sell $     4,967
+    Reason: New short: $4,967
+  OPEN   TECH   sell $     4,967
+    Reason: New short: $4,967
+  OPEN   NRG    sell $     4,967
+    Reason: New short: $4,967
+  OPEN   TSLA   sell $     4,967
+    Reason: New short: $4,967
+  OPEN   DDOG   sell $     4,967
+    Reason: New short: $4,967
+  OPEN   AXON   sell $     4,967
+    Reason: New short: $4,967
+  OPEN   WTW    sell $     4,967
+    Reason: New short: $4,967
+
+======================================================================
+
+RESULTS:
+  ENPH   - submitted
+    Order ID: d5e1d66c-0c4e-4a58-9203-726bf3a0faad
+  ABBV   - failed
+    Error: You must supply a method of authentication
+  VTR    - failed
+    Error: You must supply a method of authentication
+  FIS    - failed
+    Error: You must supply a method of authentication
+  DD     - failed
+    Error: You must supply a method of authentication
+  TECH   - failed
+    Error: You must supply a method of authentication
+  NRG    - failed
+    Error: You must supply a method of authentication
+  TSLA   - failed
+    Error: You must supply a method of authentication
+  DDOG   - failed
+    Error: You must supply a method of authentication
+  AXON   - failed
+    Error: You must supply a method of authentication
+  WTW    - failed
+    Error: You must supply a method of authentication

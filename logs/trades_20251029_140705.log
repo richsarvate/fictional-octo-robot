@@ -1,0 +1,92 @@
+Alpaca Trade Log - 2025-10-29 14:07:05.364273
+======================================================================
+
+ORDERS:
+  CLOSE  ENPH   sell $       117
+    Reason: Not in target portfolio
+  OPEN   EIX    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   TAP    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   GIS    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   BG     buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   DVN    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   CAG    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   APA    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   CMCSA  buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   AES    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   TGT    buy  $     4,965
+    Reason: New long: $4,965
+  OPEN   ABBV   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   VTR    sell $     4,965
+    Reason: New short: $4,965
+  OPEN   FIS    sell $     4,965
+    Reason: New short: $4,965
+  OPEN   DD     sell $     4,965
+    Reason: New short: $4,965
+  OPEN   TECH   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   NRG    sell $     4,965
+    Reason: New short: $4,965
+  OPEN   TSLA   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   DDOG   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   AXON   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   WTW    sell $     4,965
+    Reason: New short: $4,965
+
+======================================================================
+
+RESULTS:
+  ENPH   - submitted
+    Order ID: f1ba68d4-4392-4a0f-b402-fd22318cdd19
+  EIX    - submitted
+    Order ID: d69f6ec4-2f02-4c11-b453-c4f69c70b832
+  TAP    - submitted
+    Order ID: 3fe69b3f-1efb-4a51-aec4-1e2416da7b4b
+  GIS    - submitted
+    Order ID: 502eadd2-3e7f-4a22-8114-5f41af6a00f7
+  BG     - submitted
+    Order ID: d6e60a30-7c87-42ed-bee7-09a3bfbd17e0
+  DVN    - submitted
+    Order ID: 1ce09bd3-107b-402b-8a28-7a0571adfe79
+  CAG    - submitted
+    Order ID: 34de6f37-469f-4175-bac3-bdb8eb524634
+  APA    - submitted
+    Order ID: 82bd4dcb-3251-45b0-bc46-a4bf4d087396
+  CMCSA  - submitted
+    Order ID: 3866444b-72af-468f-a894-cdfc87908dee
+  AES    - submitted
+    Order ID: 77f908f0-ef1e-4eb1-af5e-f97997a7984e
+  TGT    - submitted
+    Order ID: bae158f9-de66-46c5-a796-27d04807047c
+  ABBV   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  VTR    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  FIS    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  DD     - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  TECH   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  NRG    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  TSLA   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  DDOG   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  AXON   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  WTW    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}

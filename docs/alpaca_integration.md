@@ -30,4 +30,9 @@ Execute Value strategy trades automatically via Alpaca API.
 - Verify account buying power before trading
 - Log all trades to file with timestamp
 
-Alpaca Token: d59a15de-0f0e-4a44-9c8f-3e9ba52c488f
+ALPACA_CONFIG = {
+    'api_key': 'PKQVXOTOIW6WBHTREFIRLCNKYY',
+    'secret_key': '9P5RQ5QwMFErFGVMTRUarUbCzhuXGX1Mp1mhiFN12rnT',
+    'base_url': 'https://paper-api.alpaca.markets',  # Paper trading endpoint
+    'api_version': 'v2'
+}

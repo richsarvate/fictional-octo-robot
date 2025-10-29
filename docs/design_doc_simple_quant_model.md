@@ -97,3 +97,8 @@ Portfolio Turnover: 4.7%
 **Time Commitment:** 
 - Manual: ~30 min every Monday
 - Automated: Set it and forget it
+
+
+**Paper Trading:** 
+add Alpaca integration
+Token: d59a15de-0f0e-4a44-9c8f-3e9ba52c488f

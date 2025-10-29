@@ -1,0 +1,52 @@
+Alpaca Trade Log - 2025-10-29 14:08:58.164736
+======================================================================
+
+ORDERS:
+  CLOSE  ENPH   sell $         0
+    Reason: Not in target portfolio
+  OPEN   ABBV   sell $     4,966
+    Reason: New short: $4,966
+  OPEN   VTR    sell $     4,966
+    Reason: New short: $4,966
+  OPEN   FIS    sell $     4,966
+    Reason: New short: $4,966
+  OPEN   DD     sell $     4,966
+    Reason: New short: $4,966
+  OPEN   TECH   sell $     4,966
+    Reason: New short: $4,966
+  OPEN   NRG    sell $     4,966
+    Reason: New short: $4,966
+  OPEN   TSLA   sell $     4,966
+    Reason: New short: $4,966
+  OPEN   DDOG   sell $     4,966
+    Reason: New short: $4,966
+  OPEN   AXON   sell $     4,966
+    Reason: New short: $4,966
+  OPEN   WTW    sell $     4,966
+    Reason: New short: $4,966
+
+======================================================================
+
+RESULTS:
+  ENPH   - failed
+    Error: {"code":40010001,"message":"notional must be \u003e 0"}
+  ABBV   - submitted
+    Order ID: 662f9265-09e9-4ecc-a15d-63d363bd62a2
+  VTR    - submitted
+    Order ID: 8b9fe413-523c-497a-b3aa-3e5c1f4750dd
+  FIS    - submitted
+    Order ID: 22869b48-67bb-4178-937d-75052cded172
+  DD     - submitted
+    Order ID: 4e85ffa9-9f36-413d-91fc-788ea027eb64
+  TECH   - failed
+    Error: cannot convert float infinity to integer
+  NRG    - submitted
+    Order ID: 6317d019-24c4-456a-b4c0-b9cdc2d3134f
+  TSLA   - submitted
+    Order ID: 3b5a6002-0cdb-4ad3-9a6c-6c5feb9fda27
+  DDOG   - failed
+    Error: cannot convert float infinity to integer
+  AXON   - failed
+    Error: cannot convert float infinity to integer
+  WTW    - submitted
+    Order ID: c6851d17-8086-4a4a-a92c-493b5f8e9fa5

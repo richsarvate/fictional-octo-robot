@@ -1,4 +1,4 @@
-# trader.py Design Document
+#choose.py Design Document
 
 ## Purpose
 Simple on-demand script to generate trading recommendations using the Value signal strategy.

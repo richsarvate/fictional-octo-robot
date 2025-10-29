@@ -1,0 +1,92 @@
+Alpaca Trade Log - 2025-10-29 14:02:09.295009
+======================================================================
+
+ORDERS:
+  CLOSE  ENPH   sell $   188,510
+    Reason: Not in target portfolio
+  OPEN   EIX    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   TAP    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   GIS    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   BG     buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   DVN    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   CAG    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   APA    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   CMCSA  buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   AES    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   TGT    buy  $     4,959
+    Reason: New long: $4,959
+  OPEN   ABBV   sell $     4,959
+    Reason: New short: $4,959
+  OPEN   VTR    sell $     4,959
+    Reason: New short: $4,959
+  OPEN   FIS    sell $     4,959
+    Reason: New short: $4,959
+  OPEN   DD     sell $     4,959
+    Reason: New short: $4,959
+  OPEN   TECH   sell $     4,959
+    Reason: New short: $4,959
+  OPEN   NRG    sell $     4,959
+    Reason: New short: $4,959
+  OPEN   TSLA   sell $     4,959
+    Reason: New short: $4,959
+  OPEN   DDOG   sell $     4,959
+    Reason: New short: $4,959
+  OPEN   AXON   sell $     4,959
+    Reason: New short: $4,959
+  OPEN   WTW    sell $     4,959
+    Reason: New short: $4,959
+
+======================================================================
+
+RESULTS:
+  ENPH   - submitted
+    Order ID: 8da42b9f-d9d4-47a9-8e95-fdbd1c2dc9d1
+  EIX    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  TAP    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  GIS    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  BG     - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  DVN    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  CAG    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  APA    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  CMCSA  - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  AES    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  TGT    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  ABBV   - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  VTR    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  FIS    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  DD     - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  TECH   - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  NRG    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  TSLA   - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  DDOG   - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  AXON   - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}
+  WTW    - failed
+    Error: {"code":42210000,"message":"notional value must be limited to 2 decimal places"}

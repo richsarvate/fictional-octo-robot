@@ -1,0 +1,40 @@
+Alpaca Trade Log - 2025-10-29 14:09:32.051761
+======================================================================
+
+ORDERS:
+  CLOSE  ENPH   sell $         0
+    Reason: Not in target portfolio
+  ADJUST ABBV   sell $       431
+    Reason: Rebalance: $-4,534 -> $-4,965
+  OPEN   TECH   sell $     4,965
+    Reason: New short: $4,965
+  ADJUST NRG    sell $       105
+    Reason: Rebalance: $-4,860 -> $-4,965
+  ADJUST TSLA   sell $       361
+    Reason: Rebalance: $-4,605 -> $-4,965
+  OPEN   DDOG   sell $     4,965
+    Reason: New short: $4,965
+  OPEN   AXON   sell $     4,965
+    Reason: New short: $4,965
+  ADJUST WTW    sell $       197
+    Reason: Rebalance: $-4,768 -> $-4,965
+
+======================================================================
+
+RESULTS:
+  ENPH   - failed
+    Error: {"code":40010001,"message":"notional must be \u003e 0"}
+  ABBV   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  TECH   - submitted
+    Order ID: af54be99-5c8e-492c-9bbc-bbbb91112bea
+  NRG    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  TSLA   - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
+  DDOG   - submitted
+    Order ID: 823ccab4-0327-4a11-97df-6596807fb222
+  AXON   - submitted
+    Order ID: 6c6b303c-5b2d-4bd7-89d4-b569ca0c8b8e
+  WTW    - failed
+    Error: {"code":42210000,"message":"fractional orders cannot be sold short"}
