@@ -12,12 +12,16 @@ import pandas as pd
 
 from data import get_clean_sp500_data
 from signal_meanrev import MeanReversionSignal, calculate_signal_quality
+from signal_momentum import MomentumSignal
+from signal_combined import CombinedSignal
 from portfolio import Portfolio
 from backtest import Backtest
 
 
 def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
-                     top_n_long: int = None, top_n_short: int = None):
+                     top_n_long: int = None, top_n_short: int = None,
+                     strategy: str = 'combined', meanrev_weight: float = 0.5,
+                     momentum_weight: float = 0.5):
     """
     Run strategy for current date and output recommendations.
     
@@ -26,9 +30,18 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         days: Number of days of historical data to fetch
         top_n_long: Only buy top N long positions (None = all)
         top_n_short: Only short top N short positions (None = all)
+        strategy: Signal strategy to use ('meanrev', 'momentum', or 'combined')
+        meanrev_weight: Weight for mean reversion in combined strategy (default: 0.5)
+        momentum_weight: Weight for momentum in combined strategy (default: 0.5)
     """
     print("=" * 70)
-    print("MEAN REVERSION STOCK PICKING STRATEGY")
+    if strategy == 'combined':
+        print("COMBINED SIGNAL STOCK PICKING STRATEGY")
+        print(f"Mean Reversion: {meanrev_weight:.0%}, Momentum: {momentum_weight:.0%}")
+    elif strategy == 'momentum':
+        print("MOMENTUM STOCK PICKING STRATEGY")
+    else:
+        print("MEAN REVERSION STOCK PICKING STRATEGY")
     print("=" * 70)
     print(f"Date: {datetime.now().strftime('%Y-%m-%d')}")
     print(f"Portfolio Value: ${portfolio_value:,.0f}")
@@ -42,18 +55,41 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
     
     data, tickers = get_clean_sp500_data(start_date=start_date)
     
-    # Calculate signals
-    print("\nCalculating mean reversion signals...")
-    signal_calc = MeanReversionSignal()
-    signals = signal_calc.calculate(data)
+    # Calculate signals based on strategy
+    if strategy == 'combined':
+        signal_calc = CombinedSignal(
+            meanrev_weight=meanrev_weight,
+            momentum_weight=momentum_weight
+        )
+        signals, meanrev_signals, momentum_signals = signal_calc.calculate(data)
+        
+        # Evaluate signal quality
+        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals)
+        quality = quality_results['combined']
+        
+    elif strategy == 'momentum':
+        print("\nCalculating momentum signals...")
+        signal_calc = MomentumSignal()
+        signals = signal_calc.calculate(data)
+        
+        # Calculate signal quality
+        from signal_momentum import calculate_signal_quality as calc_quality_mom
+        print("\nEvaluating signal quality...")
+        quality = calc_quality_mom(signals)
+        
+    else:  # meanrev
+        print("\nCalculating mean reversion signals...")
+        signal_calc = MeanReversionSignal()
+        signals = signal_calc.calculate(data)
+        
+        # Calculate signal quality
+        print("\nEvaluating signal quality...")
+        quality = calculate_signal_quality(signals)
     
     # Get current signals
     current_signals = signal_calc.get_current_signals(signals)
     print(f"Generated signals for {len(current_signals)} stocks")
     
-    # Calculate signal quality
-    print("\nEvaluating signal quality...")
-    quality = calculate_signal_quality(signals)
     print(f"Information Coefficient: {quality['information_coefficient']:.4f}")
     print(f"Historical Win Rate: {quality['win_rate']:.1%}")
     
@@ -74,20 +110,22 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
     
     top_signals = signal_calc.get_top_signals(current_signals, n=10)
     
-    print("\nStrongest BUY Signals (Most Oversold):")
+    print("\nStrongest BUY Signals:")
     print("-" * 70)
     for ticker, row in top_signals['buy'].iterrows():
         weight = positions.loc[ticker, 'weight'] if ticker in positions.index else 0
         dollars = weight * portfolio_value
-        print(f"{ticker:<8} Z-Score: {row['signal_zscore']:>6.2f}  "
+        zscore_val = row['signal_zscore']
+        print(f"{ticker:<8} Z-Score: {zscore_val:>6.2f}  "
               f"Weight: {weight*100:>5.2f}%  Value: ${dollars:>10,.0f}")
     
-    print("\nStrongest SELL Signals (Most Overbought):")
+    print("\nStrongest SELL Signals:")
     print("-" * 70)
     for ticker, row in top_signals['sell'].iterrows():
         weight = positions.loc[ticker, 'weight'] if ticker in positions.index else 0
         dollars = weight * portfolio_value
-        print(f"{ticker:<8} Z-Score: {row['signal_zscore']:>6.2f}  "
+        zscore_val = row['signal_zscore']
+        print(f"{ticker:<8} Z-Score: {zscore_val:>6.2f}  "
               f"Weight: {weight*100:>5.2f}%  Value: ${dollars:>10,.0f}")
     
     print("\n" + "=" * 70)
@@ -100,7 +138,9 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
 
 def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
                       start_date: str = None, end_date: str = None,
-                      top_n_long: int = None, top_n_short: int = None):
+                      top_n_long: int = None, top_n_short: int = None,
+                      strategy: str = 'combined', meanrev_weight: float = 0.5,
+                      momentum_weight: float = 0.5):
     """
     Run historical backtest.
     
@@ -111,9 +151,16 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
         end_date: Specific end date (default: today)
         top_n_long: Only buy top N long positions (None = all)
         top_n_short: Only short top N short positions (None = all)
+        strategy: Signal strategy to use ('meanrev', 'momentum', or 'combined')
+        meanrev_weight: Weight for mean reversion in combined strategy (default: 0.5)
+        momentum_weight: Weight for momentum in combined strategy (default: 0.5)
     """
     print("=" * 70)
     print("BACKTEST MODE")
+    if strategy == 'combined':
+        print(f"Strategy: Combined (Mean Rev: {meanrev_weight:.0%}, Momentum: {momentum_weight:.0%})")
+    else:
+        print(f"Strategy: {strategy.title()}")
     print("=" * 70)
     
     # For backtesting, we need data BEFORE the backtest period for signal calculation
@@ -132,16 +179,36 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
     
     print(f"Backtest: {start_date} to {end_date}")
     if top_n_long or top_n_short:
-        print(f"Strategy: Top {top_n_long or 0} Longs / Top {top_n_short or 0} Shorts")
+        print(f"Portfolio: Top {top_n_long or 0} Longs / Top {top_n_short or 0} Shorts")
     print(f"Capital: ${capital:,.0f}\n")
     
     # Load data (no downloading!)
     print("Loading data...")
     data, tickers = get_clean_sp500_data(start_date=data_start, end_date=end_date)
     
-    # Calculate signals
-    signal_calc = MeanReversionSignal()
-    signals = signal_calc.calculate(data)
+    # Calculate signals based on strategy
+    if strategy == 'combined':
+        signal_calc = CombinedSignal(
+            meanrev_weight=meanrev_weight,
+            momentum_weight=momentum_weight
+        )
+        signals, meanrev_signals, momentum_signals = signal_calc.calculate(data)
+        
+        # Evaluate signal quality
+        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals)
+        quality = quality_results['combined']
+        
+    elif strategy == 'momentum':
+        signal_calc = MomentumSignal()
+        signals = signal_calc.calculate(data)
+        
+        from signal_momentum import calculate_signal_quality as calc_quality_mom
+        quality = calc_quality_mom(signals)
+        
+    else:  # meanrev
+        signal_calc = MeanReversionSignal()
+        signals = signal_calc.calculate(data)
+        quality = calculate_signal_quality(signals)
     
     # Filter data and signals to backtest period only
     backtest_start_dt = pd.Timestamp(start_date)
@@ -149,9 +216,6 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
     signals = signals[signals.index.get_level_values('Date') >= backtest_start_dt]
     
     print(f"Trading days: {len(data.index.get_level_values('Date').unique())}")
-    
-    # Evaluate signal quality
-    quality = calculate_signal_quality(signals)
     print(f"Signal IC: {quality['information_coefficient']:.3f}, Win Rate: {quality['win_rate']:.1%}\n")
     
     # Run backtest
@@ -181,7 +245,7 @@ def run_backtest_mode(days: int = 3650, capital: float = 1_000_000,
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Mean Reversion Stock Picking Strategy'
+        description='Stock Picking Strategy with Multiple Signals'
     )
     parser.add_argument(
         '--backtest',
@@ -223,6 +287,25 @@ def main():
         type=int,
         default=None,
         help='Only short top N short positions (default: all)'
+    )
+    parser.add_argument(
+        '--strategy',
+        type=str,
+        default='combined',
+        choices=['meanrev', 'momentum', 'combined'],
+        help='Signal strategy: meanrev, momentum, or combined (default: combined)'
+    )
+    parser.add_argument(
+        '--meanrev-weight',
+        type=float,
+        default=0.5,
+        help='Weight for mean reversion in combined strategy (default: 0.5)'
+    )
+    parser.add_argument(
+        '--momentum-weight',
+        type=float,
+        default=0.5,
+        help='Weight for momentum in combined strategy (default: 0.5)'
     )
     parser.add_argument(
         '--random-month',
@@ -270,14 +353,20 @@ def main():
                 start_date=args.start_date,
                 end_date=args.end_date,
                 top_n_long=args.top_n_long,
-                top_n_short=args.top_n_short
+                top_n_short=args.top_n_short,
+                strategy=args.strategy,
+                meanrev_weight=args.meanrev_weight,
+                momentum_weight=args.momentum_weight
             )
         else:
             run_live_strategy(
                 portfolio_value=args.portfolio_value,
                 days=args.days,
                 top_n_long=args.top_n_long,
-                top_n_short=args.top_n_short
+                top_n_short=args.top_n_short,
+                strategy=args.strategy,
+                meanrev_weight=args.meanrev_weight,
+                momentum_weight=args.momentum_weight
             )
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
