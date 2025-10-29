@@ -3,12 +3,16 @@
 Main script to run the mean reversion stock picking strategy.
 
 Usage:
-    python run_strategy.py [--backtest] [--days DAYS] [--portfolio-value VALUE]
+    python scripts/run_strategy.py [--backtest] [--days DAYS] [--portfolio-value VALUE]
 """
 import argparse
 from datetime import datetime, timedelta
 import sys
 import pandas as pd
+from pathlib import Path
+
+# Add parent directory to path so we can import from root
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from data.data import get_clean_sp500_data
 from signals.signal_meanrev import MeanReversionSignal, calculate_signal_quality
