@@ -46,7 +46,13 @@
 
 ## January 2022 (21 days) - Bear Market Test
 
-### Combined Strategies Only
+### Individual Strategies
+
+| Strategy | Return | Sharpe | Max DD | Win Rate | IC |
+|----------|--------|--------|--------|----------|-----|
+| Value | -1.78% | -1.26 | -5.35% | 35.0% | 0.005 |
+
+### Combined Strategies
 
 | Weights | Return | Sharpe | Max DD | Win Rate | IC |
 |---------|--------|--------|--------|----------|-----|
