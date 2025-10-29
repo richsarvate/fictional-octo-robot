@@ -1,48 +1,66 @@
 """
 Combined signal calculator.
 
-Combines multiple signals (mean reversion and momentum) into a single composite signal.
+Combines multiple signals (mean reversion, momentum, sector relative, and value) into a single composite signal.
 """
 import pandas as pd
 import numpy as np
 from signal_meanrev import MeanReversionSignal, calculate_signal_quality as calc_quality_meanrev
 from signal_momentum import MomentumSignal, calculate_signal_quality as calc_quality_momentum
+from signal_sector_relative import SectorRelativeSignal, calculate_signal_quality as calc_quality_sector
+from signal_value import ValueSignal, calculate_signal_quality as calc_quality_value
 
 
 class CombinedSignal:
     """
-    Combined signal that blends mean reversion and momentum signals.
+    Combined signal that blends mean reversion, momentum, sector relative, and value signals.
     
     Uses weighted average of individual signals to create composite signal.
     """
     
-    def __init__(self, meanrev_weight: float = 0.5, momentum_weight: float = 0.5,
-                 meanrev_params: dict = None, momentum_params: dict = None):
+    def __init__(self, meanrev_weight: float = 0.25, momentum_weight: float = 0.25,
+                 sector_weight: float = 0.25, value_weight: float = 0.25,
+                 meanrev_params: dict = None, momentum_params: dict = None,
+                 sector_params: dict = None, value_params: dict = None):
         """
         Initialize combined signal.
         
         Args:
-            meanrev_weight: Weight for mean reversion signal (default: 0.5)
-            momentum_weight: Weight for momentum signal (default: 0.5)
+            meanrev_weight: Weight for mean reversion signal (default: 0.25)
+            momentum_weight: Weight for momentum signal (default: 0.25)
+            sector_weight: Weight for sector relative signal (default: 0.25)
+            value_weight: Weight for value signal (default: 0.25)
             meanrev_params: Parameters for mean reversion signal (optional)
             momentum_params: Parameters for momentum signal (optional)
+            sector_params: Parameters for sector relative signal (optional)
+            value_params: Parameters for value signal (optional)
         """
         self.meanrev_weight = meanrev_weight
         self.momentum_weight = momentum_weight
+        self.sector_weight = sector_weight
+        self.value_weight = value_weight
         
         # Normalize weights to sum to 1
-        total = meanrev_weight + momentum_weight
+        total = meanrev_weight + momentum_weight + sector_weight + value_weight
         self.meanrev_weight /= total
         self.momentum_weight /= total
+        self.sector_weight /= total
+        self.value_weight /= total
         
         # Initialize signal calculators
         meanrev_params = meanrev_params or {}
         momentum_params = momentum_params or {}
+        sector_params = sector_params or {}
+        value_params = value_params or {}
         
         self.meanrev_calc = MeanReversionSignal(**meanrev_params)
         self.momentum_calc = MomentumSignal(**momentum_params)
+        self.sector_calc = SectorRelativeSignal(**sector_params)
+        self.value_calc = ValueSignal(**value_params)
         
-        print(f"Combined Signal Weights: Mean Rev={self.meanrev_weight:.1%}, Momentum={self.momentum_weight:.1%}")
+        print(f"Combined Signal Weights: Mean Rev={self.meanrev_weight:.1%}, " +
+              f"Momentum={self.momentum_weight:.1%}, Sector={self.sector_weight:.1%}, " +
+              f"Value={self.value_weight:.1%}")
     
     def calculate(self, data: pd.DataFrame) -> tuple:
         """
@@ -52,30 +70,37 @@ class CombinedSignal:
             data: DataFrame with MultiIndex (Date, Ticker) and 'close' column
             
         Returns:
-            Tuple of (combined_signals, meanrev_signals, momentum_signals)
+            Tuple of (combined_signals, meanrev_signals, momentum_signals, sector_signals, value_signals)
         """
         print("\n" + "=" * 70)
-        print("CALCULATING COMBINED SIGNALS")
+        print("CALCULATING COMBINED SIGNALS (4 SIGNALS)")
         print("=" * 70)
         
         # Calculate individual signals
         meanrev_signals = self.meanrev_calc.calculate(data)
         momentum_signals = self.momentum_calc.calculate(data)
+        sector_signals = self.sector_calc.calculate(data)
+        value_signals = self.value_calc.calculate(data)
         
         # Combine signals
-        print("\nCombining signals...")
-        combined = self._combine_signals(meanrev_signals, momentum_signals)
+        print("\nCombining all signals...")
+        combined = self._combine_signals(meanrev_signals, momentum_signals, 
+                                         sector_signals, value_signals)
         
-        return combined, meanrev_signals, momentum_signals
+        return combined, meanrev_signals, momentum_signals, sector_signals, value_signals
     
     def _combine_signals(self, meanrev_signals: pd.DataFrame, 
-                         momentum_signals: pd.DataFrame) -> pd.DataFrame:
+                         momentum_signals: pd.DataFrame,
+                         sector_signals: pd.DataFrame,
+                         value_signals: pd.DataFrame) -> pd.DataFrame:
         """
-        Combine mean reversion and momentum signals.
+        Combine all four signals.
         
         Args:
             meanrev_signals: Mean reversion signal DataFrame
             momentum_signals: Momentum signal DataFrame
+            sector_signals: Sector relative signal DataFrame
+            value_signals: Value signal DataFrame
             
         Returns:
             Combined signal DataFrame
@@ -87,14 +112,24 @@ class CombinedSignal:
         mom_zscore = momentum_signals[['signal_zscore']].rename(
             columns={'signal_zscore': 'momentum_zscore'}
         )
+        sector_zscore = sector_signals[['signal_zscore']].rename(
+            columns={'signal_zscore': 'sector_zscore'}
+        )
+        value_zscore = value_signals[['signal_zscore']].rename(
+            columns={'signal_zscore': 'value_zscore'}
+        )
         
         # Merge on index (Date, Ticker)
         combined = mr_zscore.join(mom_zscore, how='inner')
+        combined = combined.join(sector_zscore, how='inner')
+        combined = combined.join(value_zscore, how='inner')
         
         # Calculate weighted average
         combined['signal_zscore'] = (
             self.meanrev_weight * combined['meanrev_zscore'] + 
-            self.momentum_weight * combined['momentum_zscore']
+            self.momentum_weight * combined['momentum_zscore'] +
+            self.sector_weight * combined['sector_zscore'] +
+            self.value_weight * combined['value_zscore']
         )
         
         # Add close price for reference
@@ -148,7 +183,9 @@ class CombinedSignal:
     
     def evaluate_signals(self, combined_signals: pd.DataFrame,
                         meanrev_signals: pd.DataFrame,
-                        momentum_signals: pd.DataFrame) -> dict:
+                        momentum_signals: pd.DataFrame,
+                        sector_signals: pd.DataFrame,
+                        value_signals: pd.DataFrame) -> dict:
         """
         Evaluate quality of all signals.
         
@@ -156,6 +193,8 @@ class CombinedSignal:
             combined_signals: Combined signal DataFrame
             meanrev_signals: Mean reversion signal DataFrame
             momentum_signals: Momentum signal DataFrame
+            sector_signals: Sector relative signal DataFrame
+            value_signals: Value signal DataFrame
             
         Returns:
             Dictionary with quality metrics for all signals
@@ -167,6 +206,8 @@ class CombinedSignal:
         # Calculate quality for each signal type
         mr_quality = calc_quality_meanrev(meanrev_signals)
         mom_quality = calc_quality_momentum(momentum_signals)
+        sector_quality = calc_quality_sector(sector_signals)
+        value_quality = calc_quality_value(value_signals)
         
         # For combined signal, we need to prepare data in same format
         combined_quality = self._calculate_combined_quality(combined_signals)
@@ -174,6 +215,8 @@ class CombinedSignal:
         results = {
             'mean_reversion': mr_quality,
             'momentum': mom_quality,
+            'sector_relative': sector_quality,
+            'value': value_quality,
             'combined': combined_quality
         }
         
@@ -186,7 +229,15 @@ class CombinedSignal:
         print(f"  IC: {mom_quality['information_coefficient']:.4f}")
         print(f"  Win Rate: {mom_quality['win_rate']:.1%}")
         
-        print("\nCombined Signal:")
+        print("\nSector Relative Signal:")
+        print(f"  IC: {sector_quality['information_coefficient']:.4f}")
+        print(f"  Win Rate: {sector_quality['win_rate']:.1%}")
+        
+        print("\nValue Signal:")
+        print(f"  IC: {value_quality['information_coefficient']:.4f}")
+        print(f"  Win Rate: {value_quality['win_rate']:.1%}")
+        
+        print("\nCombined Signal (All 4):")
         print(f"  IC: {combined_quality['information_coefficient']:.4f}")
         print(f"  Win Rate: {combined_quality['win_rate']:.1%}")
         

@@ -14,6 +14,7 @@ from data import get_clean_sp500_data
 from signal_meanrev import MeanReversionSignal, calculate_signal_quality
 from signal_momentum import MomentumSignal
 from signal_sector_relative import SectorRelativeSignal
+from signal_value import ValueSignal
 from signal_combined import CombinedSignal
 from portfolio import Portfolio
 from backtest import Backtest
@@ -22,7 +23,8 @@ from backtest import Backtest
 def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
                      top_n_long: int = None, top_n_short: int = None,
                      strategy: str = 'combined', meanrev_weight: float = 0.5,
-                     momentum_weight: float = 0.5):
+                     momentum_weight: float = 0.5, sector_weight: float = 0.0,
+                     value_weight: float = 0.0):
     """
     Run strategy for current date and output recommendations.
     
@@ -34,6 +36,8 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         strategy: Signal strategy to use ('meanrev', 'momentum', or 'combined')
         meanrev_weight: Weight for mean reversion in combined strategy (default: 0.5)
         momentum_weight: Weight for momentum in combined strategy (default: 0.5)
+        sector_weight: Weight for sector relative in combined strategy (default: 0.0)
+        value_weight: Weight for value in combined strategy (default: 0.0)
     """
     print("=" * 70)
     if strategy == 'combined':
@@ -43,6 +47,8 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         print("MOMENTUM STOCK PICKING STRATEGY")
     elif strategy == 'sector':
         print("SECTOR RELATIVE STOCK PICKING STRATEGY")
+    elif strategy == 'value':
+        print("VALUE STOCK PICKING STRATEGY")
     else:
         print("MEAN REVERSION STOCK PICKING STRATEGY")
     print("=" * 70)
@@ -62,12 +68,15 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
     if strategy == 'combined':
         signal_calc = CombinedSignal(
             meanrev_weight=meanrev_weight,
-            momentum_weight=momentum_weight
+            momentum_weight=momentum_weight,
+            sector_weight=sector_weight,
+            value_weight=value_weight
         )
-        signals, meanrev_signals, momentum_signals = signal_calc.calculate(data)
+        signals, meanrev_signals, momentum_signals, sector_signals, value_signals = signal_calc.calculate(data)
         
         # Evaluate signal quality
-        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals)
+        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals, 
+                                                       sector_signals, value_signals)
         quality = quality_results['combined']
         
     elif strategy == 'momentum':
@@ -89,6 +98,16 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         from signal_sector_relative import calculate_signal_quality as calc_quality_sector
         print("\nEvaluating signal quality...")
         quality = calc_quality_sector(signals)
+        
+    elif strategy == 'value':
+        print("\nCalculating value signals...")
+        signal_calc = ValueSignal()
+        signals = signal_calc.calculate(data)
+        
+        # Calculate signal quality
+        from signal_value import calculate_signal_quality as calc_quality_value
+        print("\nEvaluating signal quality...")
+        quality = calc_quality_value(signals)
         
     else:  # meanrev
         print("\nCalculating mean reversion signals...")
@@ -153,7 +172,8 @@ def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
                       start_date: str = None, end_date: str = None,
                       top_n_long: int = None, top_n_short: int = None,
                       strategy: str = 'combined', meanrev_weight: float = 0.5,
-                      momentum_weight: float = 0.5):
+                      momentum_weight: float = 0.5, sector_weight: float = 0.0,
+                      value_weight: float = 0.0):
     """
     Run historical backtest.
     
@@ -174,6 +194,8 @@ def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
         print(f"Strategy: Combined (Mean Rev: {meanrev_weight:.0%}, Momentum: {momentum_weight:.0%})")
     elif strategy == 'sector':
         print(f"Strategy: Sector Relative")
+    elif strategy == 'value':
+        print(f"Strategy: Value")
     else:
         print(f"Strategy: {strategy.title()}")
     print("=" * 70)
@@ -208,12 +230,15 @@ def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
     if strategy == 'combined':
         signal_calc = CombinedSignal(
             meanrev_weight=meanrev_weight,
-            momentum_weight=momentum_weight
+            momentum_weight=momentum_weight,
+            sector_weight=sector_weight,
+            value_weight=value_weight
         )
-        signals, meanrev_signals, momentum_signals = signal_calc.calculate(data)
+        signals, meanrev_signals, momentum_signals, sector_signals, value_signals = signal_calc.calculate(data)
         
         # Evaluate signal quality
-        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals)
+        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals,
+                                                       sector_signals, value_signals)
         quality = quality_results['combined']
         
     elif strategy == 'momentum':
@@ -229,6 +254,13 @@ def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
         
         from signal_sector_relative import calculate_signal_quality as calc_quality_sector
         quality = calc_quality_sector(signals)
+        
+    elif strategy == 'value':
+        signal_calc = ValueSignal()
+        signals = signal_calc.calculate(data)
+        
+        from signal_value import calculate_signal_quality as calc_quality_value
+        quality = calc_quality_value(signals)
         
     else:  # meanrev
         signal_calc = MeanReversionSignal()
@@ -317,8 +349,8 @@ def main():
         '--strategy',
         type=str,
         default='combined',
-        choices=['meanrev', 'momentum', 'sector', 'combined'],
-        help='Signal strategy: meanrev, momentum, sector, or combined (default: combined)'
+        choices=['meanrev', 'momentum', 'sector', 'value', 'combined'],
+        help='Signal strategy: meanrev, momentum, sector, value, or combined (default: combined)'
     )
     parser.add_argument(
         '--meanrev-weight',
@@ -331,6 +363,18 @@ def main():
         type=float,
         default=0.5,
         help='Weight for momentum in combined strategy (default: 0.5)'
+    )
+    parser.add_argument(
+        '--sector-weight',
+        type=float,
+        default=0.0,
+        help='Weight for sector relative in combined strategy (default: 0.0)'
+    )
+    parser.add_argument(
+        '--value-weight',
+        type=float,
+        default=0.0,
+        help='Weight for value in combined strategy (default: 0.0)'
     )
     parser.add_argument(
         '--random-month',
@@ -381,7 +425,9 @@ def main():
                 top_n_short=args.top_n_short,
                 strategy=args.strategy,
                 meanrev_weight=args.meanrev_weight,
-                momentum_weight=args.momentum_weight
+                momentum_weight=args.momentum_weight,
+                sector_weight=args.sector_weight,
+                value_weight=args.value_weight
             )
         else:
             run_live_strategy(
@@ -391,7 +437,9 @@ def main():
                 top_n_short=args.top_n_short,
                 strategy=args.strategy,
                 meanrev_weight=args.meanrev_weight,
-                momentum_weight=args.momentum_weight
+                momentum_weight=args.momentum_weight,
+                sector_weight=args.sector_weight,
+                value_weight=args.value_weight
             )
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
