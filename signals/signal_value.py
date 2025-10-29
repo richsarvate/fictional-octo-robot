@@ -31,7 +31,7 @@ class ValueSignal:
         self.zscore_window = zscore_window
         self.use_forward_pe = use_forward_pe
         self.sector_map = None
-        self.cache_dir = Path('data_cache')
+        self.cache_dir = Path('data/data_cache')
         self.sector_cache_file = self.cache_dir / 'sector_map.pkl'
         self.pe_cache_file = self.cache_dir / 'pe_ratios.pkl'
     

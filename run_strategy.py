@@ -10,14 +10,14 @@ from datetime import datetime, timedelta
 import sys
 import pandas as pd
 
-from data import get_clean_sp500_data
-from signal_meanrev import MeanReversionSignal, calculate_signal_quality
-from signal_momentum import MomentumSignal
-from signal_sector_relative import SectorRelativeSignal
-from signal_value import ValueSignal
-from signal_combined import CombinedSignal
-from portfolio import Portfolio
-from backtest import Backtest
+from data.data import get_clean_sp500_data
+from signals.signal_meanrev import MeanReversionSignal, calculate_signal_quality
+from signals.signal_momentum import MomentumSignal
+from signals.signal_sector_relative import SectorRelativeSignal
+from signals.signal_value import ValueSignal
+from signals.signal_combined import CombinedSignal
+from strategies.portfolio import Portfolio
+from strategies.backtest import Backtest
 
 
 def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
@@ -85,7 +85,7 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         signals = signal_calc.calculate(data)
         
         # Calculate signal quality
-        from signal_momentum import calculate_signal_quality as calc_quality_mom
+        from signals.signal_momentum import calculate_signal_quality as calc_quality_mom
         print("\nEvaluating signal quality...")
         quality = calc_quality_mom(signals)
         
@@ -95,7 +95,7 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         signals = signal_calc.calculate(data)
         
         # Calculate signal quality
-        from signal_sector_relative import calculate_signal_quality as calc_quality_sector
+        from signals.signal_sector_relative import calculate_signal_quality as calc_quality_sector
         print("\nEvaluating signal quality...")
         quality = calc_quality_sector(signals)
         
@@ -105,7 +105,7 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         signals = signal_calc.calculate(data)
         
         # Calculate signal quality
-        from signal_value import calculate_signal_quality as calc_quality_value
+        from signals.signal_value import calculate_signal_quality as calc_quality_value
         print("\nEvaluating signal quality...")
         quality = calc_quality_value(signals)
         
@@ -245,21 +245,21 @@ def run_backtest_mode(days: int = 30, capital: float = 1_000_000,
         signal_calc = MomentumSignal()
         signals = signal_calc.calculate(data)
         
-        from signal_momentum import calculate_signal_quality as calc_quality_mom
+        from signals.signal_momentum import calculate_signal_quality as calc_quality_mom
         quality = calc_quality_mom(signals)
         
     elif strategy == 'sector':
         signal_calc = SectorRelativeSignal()
         signals = signal_calc.calculate(data)
         
-        from signal_sector_relative import calculate_signal_quality as calc_quality_sector
+        from signals.signal_sector_relative import calculate_signal_quality as calc_quality_sector
         quality = calc_quality_sector(signals)
         
     elif strategy == 'value':
         signal_calc = ValueSignal()
         signals = signal_calc.calculate(data)
         
-        from signal_value import calculate_signal_quality as calc_quality_value
+        from signals.signal_value import calculate_signal_quality as calc_quality_value
         quality = calc_quality_value(signals)
         
     else:  # meanrev

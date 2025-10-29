@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import List, Tuple
 
 
-DATA_DIR = Path('./stock_data')
+DATA_DIR = Path('./data/stock_data')
 DATA_DIR.mkdir(exist_ok=True)
 
 

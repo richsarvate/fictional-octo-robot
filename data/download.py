@@ -8,7 +8,7 @@ Run this once, then use run_strategy.py for backtesting.
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-from data import get_sp500_tickers, fetch_stock_data, clean_data, filter_by_liquidity, save_sp500_data
+from data.data import get_sp500_tickers, fetch_stock_data, clean_data, filter_by_liquidity, save_sp500_data
 
 
 def download_data():

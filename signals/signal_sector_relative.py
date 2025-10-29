@@ -31,7 +31,7 @@ class SectorRelativeSignal:
         self.lookback_window = lookback_window
         self.zscore_window = zscore_window
         self.sector_map = None
-        self.cache_dir = Path('data_cache')
+        self.cache_dir = Path('data/data_cache')
         self.cache_file = self.cache_dir / 'sector_map.pkl'
     
     def _load_cached_sectors(self) -> dict:

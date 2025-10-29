@@ -5,10 +5,10 @@ Combines multiple signals (mean reversion, momentum, sector relative, and value)
 """
 import pandas as pd
 import numpy as np
-from signal_meanrev import MeanReversionSignal, calculate_signal_quality as calc_quality_meanrev
-from signal_momentum import MomentumSignal, calculate_signal_quality as calc_quality_momentum
-from signal_sector_relative import SectorRelativeSignal, calculate_signal_quality as calc_quality_sector
-from signal_value import ValueSignal, calculate_signal_quality as calc_quality_value
+from signals.signal_meanrev import MeanReversionSignal, calculate_signal_quality as calc_quality_meanrev
+from signals.signal_momentum import MomentumSignal, calculate_signal_quality as calc_quality_momentum
+from signals.signal_sector_relative import SectorRelativeSignal, calculate_signal_quality as calc_quality_sector
+from signals.signal_value import ValueSignal, calculate_signal_quality as calc_quality_value
 
 
 class CombinedSignal:
