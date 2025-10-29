@@ -74,10 +74,14 @@ def run_live_strategy(portfolio_value: float = 1_000_000, days: int = 730,
         )
         signals, meanrev_signals, momentum_signals, sector_signals, value_signals = signal_calc.calculate(data)
         
-        # Evaluate signal quality
-        quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals, 
-                                                       sector_signals, value_signals)
-        quality = quality_results['combined']
+        # Evaluate signal quality (skip if insufficient data)
+        try:
+            quality_results = signal_calc.evaluate_signals(signals, meanrev_signals, momentum_signals, 
+                                                           sector_signals, value_signals)
+            quality = quality_results['combined']
+        except ValueError:
+            print("\nSkipping quality evaluation (insufficient data for forward returns)")
+            quality = {'information_coefficient': 0.0, 'win_rate': 0.5}
         
     elif strategy == 'momentum':
         print("\nCalculating momentum signals...")
@@ -312,8 +316,8 @@ def main():
     parser.add_argument(
         '--days',
         type=int,
-        default=30,
-        help='Number of days for backtest period (default: 30)'
+        default=90,
+        help='Number of days for backtest period (default: 90)'
     )
     parser.add_argument(
         '--portfolio-value',
