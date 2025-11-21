@@ -163,6 +163,40 @@ class AlpacaTrader:
         
         return orders
     
+    def _get_stock_price(self, ticker: str) -> float:
+        """
+        Get current stock price for position sizing.
+        
+        Args:
+            ticker: Stock symbol
+            
+        Returns:
+            Current price (ask for buys, bid for sells)
+        """
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockLatestQuoteRequest
+        
+        # Get API credentials
+        api_key = os.getenv('ALPACA_API_KEY_ID')
+        secret_key = os.getenv('ALPACA_SECRET_KEY')
+        if not api_key and ALPACA_CONFIG:
+            api_key = ALPACA_CONFIG.get('api_key')
+            secret_key = ALPACA_CONFIG.get('secret_key')
+        
+        # Initialize data client with auth
+        data_client = StockHistoricalDataClient(api_key, secret_key)
+        quote_request = StockLatestQuoteRequest(symbol_or_symbols=ticker)
+        quote = data_client.get_stock_latest_quote(quote_request)[ticker]
+        
+        # Try ask price, fallback to bid, then mid price
+        price = float(quote.ask_price)
+        if price == 0:
+            price = float(quote.bid_price)
+        if price == 0:
+            price = (float(quote.ask_price) + float(quote.bid_price)) / 2
+        
+        return price
+    
     def execute_trades(self, orders: List[dict], dry_run: bool = None) -> List[dict]:
         """
         Execute trades via Alpaca API.
@@ -191,37 +225,36 @@ class AlpacaTrader:
                 # Create market order
                 side = self.OrderSide.BUY if order['side'] == 'buy' else self.OrderSide.SELL
                 
-                # For short positions, need to use qty (whole shares) not notional
-                # Alpaca doesn't support fractional shares for shorts
-                if order['side'] == 'sell' and order['action'] == 'OPEN':
-                    # Get latest price to calculate share quantity
-                    from alpaca.data.historical import StockHistoricalDataClient
-                    from alpaca.data.requests import StockLatestQuoteRequest
+                # Determine if this is a short order (selling for OPEN/ADJUST)
+                is_short_order = (order['side'] == 'sell' and 
+                                 order['action'] in ['OPEN', 'ADJUST'] and
+                                 order['dollars'] > 0)  # Not a close
+                
+                if is_short_order:
+                    # For short positions, MUST use qty (whole shares) not notional
+                    # Alpaca doesn't support fractional shares for shorts
                     
-                    # Get API credentials
-                    api_key = os.getenv('ALPACA_API_KEY_ID')
-                    secret_key = os.getenv('ALPACA_SECRET_KEY')
-                    if not api_key and ALPACA_CONFIG:
-                        api_key = ALPACA_CONFIG.get('api_key')
-                        secret_key = ALPACA_CONFIG.get('secret_key')
+                    # Get current price
+                    price = self._get_stock_price(order['ticker'])
                     
-                    # Initialize data client with auth
-                    data_client = StockHistoricalDataClient(api_key, secret_key)
-                    quote_request = StockLatestQuoteRequest(symbol_or_symbols=order['ticker'])
-                    quote = data_client.get_stock_latest_quote(quote_request)[order['ticker']]
-                    
-                    # Try ask price, fallback to bid, then mid price
-                    price = float(quote.ask_price)
+                    # Check for zero/invalid price
                     if price == 0:
-                        price = float(quote.bid_price)
-                    if price == 0:
-                        price = (float(quote.ask_price) + float(quote.bid_price)) / 2
-                    
-                    if price == 0:
-                        raise ValueError(f"No valid quote for {order['ticker']}")
+                        raise ValueError(f"No valid quote available for {order['ticker']}")
                     
                     # Calculate whole shares
                     qty = int(order['dollars'] / price)
+                    
+                    # Skip orders that round to 0 shares
+                    if qty == 0:
+                        print(f"  ⊘ Skipping {order['ticker']}: adjustment too small (${order['dollars']:.2f} = 0 shares at ${price:.2f}/share)")
+                        results.append({
+                            'ticker': order['ticker'],
+                            'status': 'skipped',
+                            'reason': 'qty_too_small',
+                            'side': order['side'],
+                            'dollars': order['dollars']
+                        })
+                        continue
                     
                     order_request = self.MarketOrderRequest(
                         symbol=order['ticker'],
@@ -232,6 +265,19 @@ class AlpacaTrader:
                 else:
                     # For longs and closes, use notional (dollar-based)
                     notional_rounded = round(order['dollars'], 2)
+                    
+                    # Skip orders with invalid or near-zero notional
+                    if notional_rounded <= 1.0:
+                        print(f"  ⊘ Skipping {order['ticker']}: notional too small (${notional_rounded:.2f})")
+                        results.append({
+                            'ticker': order['ticker'],
+                            'status': 'skipped',
+                            'reason': 'notional_too_small',
+                            'side': order['side'],
+                            'dollars': order['dollars']
+                        })
+                        continue
+                    
                     order_request = self.MarketOrderRequest(
                         symbol=order['ticker'],
                         notional=notional_rounded,
@@ -250,14 +296,71 @@ class AlpacaTrader:
                 print(f"✓ Submitted: {order['action']} {order['ticker']} {order['side']} ${order['dollars']:,.0f}")
                 
             except Exception as e:
+                error_str = str(e)
+                
+                # Handle insufficient borrow availability
+                if "insufficient qty available" in error_str:
+                    try:
+                        # Extract available qty from error message
+                        # Format: "insufficient qty available for order (requested: X, available: Y)"
+                        import re
+                        match = re.search(r'available:\s*([\d.]+)', error_str)
+                        if match:
+                            available_qty = float(match.group(1))
+                            available_qty_int = int(available_qty)  # Round down to whole shares
+                            
+                            # Skip if available < 1 share
+                            if available_qty_int < 1:
+                                print(f"  ⊘ Skipping {order['ticker']}: insufficient borrow (< 1 share available)")
+                                results.append({
+                                    'ticker': order['ticker'],
+                                    'status': 'skipped',
+                                    'reason': 'insufficient_borrow',
+                                    'side': order['side'],
+                                    'dollars': order['dollars']
+                                })
+                                continue
+                            
+                            # Get target qty
+                            price = self._get_stock_price(order['ticker'])
+                            target_qty = int(order['dollars'] / price)
+                            
+                            # Retry if we can get at least 50% of target
+                            if available_qty_int >= target_qty * 0.5 and available_qty_int > 0:
+                                print(f"  ↻ Retrying {order['ticker']} with {available_qty_int} shares (available) vs {target_qty} (requested)")
+                                
+                                retry_order = self.MarketOrderRequest(
+                                    symbol=order['ticker'],
+                                    qty=available_qty_int,
+                                    side=side,
+                                    time_in_force=self.TimeInForce.DAY
+                                )
+                                
+                                submitted = self.api.submit_order(retry_order)
+                                results.append({
+                                    'ticker': order['ticker'],
+                                    'status': 'submitted_partial',
+                                    'order_id': submitted.id,
+                                    'side': order['side'],
+                                    'dollars': available_qty_int * price,
+                                    'note': f'Partial fill: {available_qty_int}/{target_qty} shares'
+                                })
+                                print(f"✓ Submitted (partial): {order['action']} {order['ticker']} {available_qty_int} shares")
+                                continue
+                            else:
+                                print(f"  ⊘ Skipping {order['ticker']}: only {available_qty_int} shares available (< 50% of {target_qty})")
+                    except Exception as retry_error:
+                        print(f"  ⚠ Retry failed for {order['ticker']}: {retry_error}")
+                
+                # Log failure
                 results.append({
                     'ticker': order['ticker'],
                     'status': 'failed',
-                    'error': str(e),
+                    'error': error_str,
                     'side': order['side'],
                     'dollars': order['dollars']
                 })
-                print(f"✗ Failed: {order['ticker']} - {e}")
+                print(f"✗ Failed: {order['ticker']} - {error_str}")
         
         return results
     
@@ -422,6 +525,47 @@ def main():
     print(f"Long Positions: {len(longs)} (${long_value:,.2f})")
     print(f"Short Positions: {len(shorts)} (${short_value:,.2f})")
     print(f"Total Deployed: ${long_value + short_value:,.2f}")
+    
+    # Cleanup zombie positions (< $10 value)
+    if not args.dry_run:
+        zombies = {t: p for t, p in final_positions.items() if abs(p['market_value']) < 10}
+        if zombies:
+            print(f"\n🧹 Cleaning up {len(zombies)} zombie position(s):")
+            for ticker, pos in zombies.items():
+                try:
+                    # Determine order side (sell longs, buy shorts)
+                    side = trader.OrderSide.SELL if pos['side'] == 'long' else trader.OrderSide.BUY
+                    qty = abs(pos['qty'])
+                    
+                    # Skip if quantity rounds to 0 (sub-penny positions)
+                    if qty < 0.001:
+                        print(f"  ⊘ Skipping {ticker}: position too small ({qty:.6f} shares, ${abs(pos['market_value']):.4f})")
+                        print(f"    → Manual intervention needed: close via Alpaca dashboard")
+                        continue
+                    
+                    # For fractional shares, round to avoid API errors
+                    # Alpaca supports fractional shares for longs but not shorts
+                    if pos['side'] == 'short':
+                        # Shorts require whole shares - round up to ensure full close
+                        qty = int(qty) + (1 if qty % 1 > 0 else 0)
+                        if qty == 0:
+                            print(f"  ⊘ Skipping {ticker}: fractional short position ({abs(pos['qty']):.6f} shares)")
+                            print(f"    → Manual intervention needed: close via Alpaca dashboard")
+                            continue
+                    
+                    # Submit close order
+                    order_request = trader.MarketOrderRequest(
+                        symbol=ticker,
+                        qty=qty,
+                        side=side,
+                        time_in_force=trader.TimeInForce.DAY
+                    )
+                    
+                    submitted = trader.api.submit_order(order_request)
+                    print(f"  ✓ Closed {ticker}: {qty:.4f} shares (${abs(pos['market_value']):.2f})")
+                    
+                except Exception as e:
+                    print(f"  ✗ Failed to close {ticker}: {e}")
     
     print("\n" + "=" * 70)
     print("Done.")
